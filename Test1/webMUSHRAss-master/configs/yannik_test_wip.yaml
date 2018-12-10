@@ -1,0 +1,222 @@
+testname: Yannik's Listening Test
+testId: yannikslisteningtest
+bufferSize: 2048
+stopOnErrors: true
+showButtonPreviousPage: true
+remoteService: service/write.php
+
+
+pages:
+    - type: generic
+      id: 1
+      name: Lower Layer Experiment
+      content: Version 0.0
+    - type: mushra
+      id: 2
+      name: Channel Check 1
+      content: 
+      showWaveform: true
+      enableLooping: true 
+      reference: configs/resources/audio/7_ChannelCheck_5_0_4_3_32ch_12secA_16bit.wav
+      createAnchor35: false
+      createAnchor70: false
+      stimuli:
+          C2: configs/resources/audio/7_ChannelCheck_5_0_4_3_32ch_12secA_16bit.wav
+          
+          
+    -
+          
+          - type: mushra
+            id: 3
+            name: Channel Check 2
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/7_ChannelCheck_5_0_4_3_32ch_12secB_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                C2: configs/resources/audio/7_ChannelCheck_5_0_4_3_32ch_12secB_16bit.wav
+              
+                    
+          - type: mushra
+            id: 4
+            name: Item 1
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/1_5_Highway_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/1_5_Highway_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/1_5_Highway_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/1_5_Highway_5_0_4_32ch_16bit.wav      
+                
+                
+          - type: mushra
+            id: 5
+            name: Item 2
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/2_34_Forrest_Steps_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/2_34_Forrest_Steps_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/2_34_Forrest_Steps_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/2_34_Forrest_Steps_5_0_4_32ch_16bit.wav 
+                
+                
+          - type: mushra
+            id: 6
+            name: Item 3
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/3_35_Bells_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/3_35_Bells_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/3_35_Bells_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/3_35_Bells_5_0_4_32ch_16bit.wav 
+                
+                
+          - type: mushra
+            id: 7
+            name: Item 4
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/4_2_Stairway_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/4_2_Stairway_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/4_2_Stairway_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/4_2_Stairway_5_0_4_32ch_16bit.wav
+                
+                
+          - type: mushra
+            id: 8
+            name: Item 5
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/5_8_Waterfall_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/5_8_Waterfall_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/5_8_Waterfall_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/5_8_Waterfall_5_0_4_32ch_16bit.wav
+            
+            
+                           
+          - type: mushra
+            id: 9
+            name: Item 6
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/6_22_Forrest_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/6_22_Forrest_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/6_22_Forrest_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/6_22_Forrest_5_0_4_32ch_16bit.wav     
+                
+                
+          - type: mushra
+            id: 10
+            name: Item 7
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/8_41_Forrest_Water_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/8_41_Forrest_Water_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/8_41_Forrest_Water_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/8_41_Forrest_Water_5_0_4_32ch_16bit.wav 
+                
+                
+          - type: mushra
+            id: 11
+            name: Item 8
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/9_44_Sintel_Run_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/9_44_Sintel_Run_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/9_44_Sintel_Run_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/9_44_Sintel_Run_5_0_4_32ch_16bit.wav
+                
+#                
+ #         - type: mushra
+  #          id: 12
+   #         name: Item 9
+    #        content: 
+     #       enableLooping: true 
+      #      reference: configs/resources/audio/10_45_Rain_5_0_4_3_32ch_16bit.wav
+       #     createAnchor35: false
+        #    createAnchor70: false
+         #   stimuli:
+          #       C2: configs/resources/audio/10_45_Rain_2_0_32ch_16bit.wav
+           #      C3: configs/resources/audio/10_45_Rain_5_0_32ch_16bit.wav
+            #     C4: configs/resources/audio/10_45_Rain_5_0_4_32ch_16bit.wav     
+                
+                                
+          - type: mushra
+            id: 13
+            name: Item 10
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/11_48_Wave_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                 C2: configs/resources/audio/11_48_Wave_2_0_32ch_16bit.wav
+                 C3: configs/resources/audio/11_48_Wave_5_0_32ch_16bit.wav
+                 C4: configs/resources/audio/11_48_Wave_5_0_4_32ch_16bit.wav
+                
+                
+          - type: mushra
+            id: 14
+            name: Item 11
+            content: 
+            enableLooping: true 
+            reference: configs/resources/audio/13_42_Sintel_Chicken_5_0_4_3_32ch_16bit.wav
+            createAnchor35: false
+            createAnchor70: false
+            stimuli:
+                C2: configs/resources/audio/13_42_Sintel_Chicken_2_0_32ch_16bit.wav
+                C3: configs/resources/audio/13_42_Sintel_Chicken_5_0_32ch_16bit.wav
+                C4: configs/resources/audio/13_42_Sintel_Chicken_5_0_4_32ch_16bit.wav               
+                      
+               
+    - type: finish
+      name: Thank you
+      content: Thank you for attending!
+      showResults: true
+      writeResults: true
+      
+      questionnaire:
+          - type: text
+            label: eMail
+            name: email
+          - type: number
+            label: Age
+            name: age
+            min: 0
+            max: 100
+            default: 30
+          - type: likert
+            name: gender
+            label: Gender
+            response:
+             - value: female
+               label: Female
+             - value: male
+               label: Male
+             - value: other
+               label: Other
+      

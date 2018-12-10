@@ -1,0 +1,123 @@
+testname: Localization test
+testId: localization
+bufferSize: 2048
+stopOnErrors: true
+showButtonPreviousPage: false
+remoteService: service/write.php
+pages:
+    - type: spatial
+      id : test_page
+      name: Training
+      content: test 
+      framerate: 500
+      roomMeasurements: [600, 240, 500] # width, height, length
+      stimuli:
+          C1: configs/resources/audio/mono_c1.wav
+          C2: configs/resources/audio/mono_c2.wav
+      responses:
+        - type: localization
+          name: locA
+          label: A
+          color: 0xff00ff      
+          stimulus: C1    
+          position: [0,0,0]
+          size: 10
+        - type: localization
+          name: locB
+          label: B
+          color: 0x004477      
+          stimulus: C1    
+          position: [0,50,50]
+          size: 5
+        - type: localization
+          name: locC
+          label: C
+          color: 0x2345ff      
+          stimulus: C2    
+          position: [30,30,0]
+          size: 10
+        - type: localization
+          name: locD
+          label: D
+          color: 0x440077      
+          stimulus: C2    
+          position: [30,50,50]
+          size: 5
+        # - type: lev
+          # name: lev1
+          # label: LEV
+          # color: 0x440077      
+          # stimulus: C2    
+          # position: [30,50,50]
+          # size: [10,10,10]
+      views: 
+        # - view: top
+        - view: right
+        - view: 3d
+          position: [400,500,400]
+      objects: 
+        - type: listener
+          position: [0,100,0]
+          rotation: [0,0,180]
+        - type: custom
+          path: lib/webmushra/spatial/resources/listener_head.dae
+          position: [0,50,0]
+          rotation: [0,0,180]
+          scale: 5
+    - type: finish
+      name: Thank you
+      content: Thank you for attending
+      showResults: false
+      writeResults: true
+      questionnaire:
+          - type: text
+            label: name/shortname/nickname
+            name: email
+          - type: number
+            label: Age
+            name: age
+            min: 0
+            max: 100
+            default: 30
+          - type: likert
+            name: gender
+            label: Gender
+            response:
+             - value: female
+               label: Female
+             - value: male
+               label: Male
+             - value: other
+               label: Other
+          - type: likert
+            name: expert_timbre
+            label: Are you an expert listener in judging timbre? 
+            response:
+             - value: no
+               label: No
+             - value: yes
+               label: Yes
+          - type: likert
+            name: expert_spatial
+            label: Are you an expert listener in spatial audio? 
+            response:
+             - value: no
+               label: No
+             - value: yes
+               label: Yes
+          - type: likert
+            name: listening_test_experience
+            label: Have you taken part in a listening test about spatial attributes yet? 
+            response:
+             - value: no
+               label: No
+             - value: yes
+               label: Yes
+          - type: likert
+            name: professional
+            label: Do you have a background in professional audio (e.g. sound/recording engineer, researcher)? 
+            response:
+             - value: no
+               label: No
+             - value: yes
+               label: Yes

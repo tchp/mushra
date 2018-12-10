@@ -1,0 +1,823 @@
+From f20cbb3e8a047d134b8b0f62a8eb8a60cef555c7 Mon Sep 17 00:00:00 2001
+From: Alexander Adami <alexander.adami@audiolabs-erlangen.de>
+Date: Thu, 22 Nov 2018 15:20:12 +0100
+Subject: [PATCH 1/3] Remove reference from MUSHRA test  - add "showReference"
+ (true/false) tag to mushra page that allows to show/hide reference button  -
+ add "removeHiddenRef" (true/false) tag to mushra page that allows to remove
+ the hidden reference from condition list
+
+---
+ lib/webmushra/audio/MushraAudioControl.js | 191 +++++++++++-----------
+ lib/webmushra/pages/MushraPage.js         | 155 ++++++++++--------
+ 2 files changed, 184 insertions(+), 162 deletions(-)
+
+diff --git a/lib/webmushra/audio/MushraAudioControl.js b/lib/webmushra/audio/MushraAudioControl.js
+index 1d24bfe..d5a83a6 100644
+--- a/lib/webmushra/audio/MushraAudioControl.js
++++ b/lib/webmushra/audio/MushraAudioControl.js
+@@ -1,47 +1,51 @@
+ /*************************************************************************
+-         (C) Copyright AudioLabs 2017 
++         (C) Copyright AudioLabs 2017
+ 
+-This source code is protected by copyright law and international treaties. This source code is made available to You subject to the terms and conditions of the Software License for the webMUSHRA.js Software. Said terms and conditions have been made available to You prior to Your download of this source code. By downloading this source code You agree to be bound by the above mentionend terms and conditions, which can also be found here: https://www.audiolabs-erlangen.de/resources/webMUSHRA. Any unauthorised use of this source code may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under law. 
++This source code is protected by copyright law and international treaties. This source code is made available to You subject to the terms and conditions of the Software License for the webMUSHRA.js Software. Said terms and conditions have been made available to You prior to Your download of this source code. By downloading this source code You agree to be bound by the above mentionend terms and conditions, which can also be found here: https://www.audiolabs-erlangen.de/resources/webMUSHRA. Any unauthorised use of this source code may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under law.
+ 
+ **************************************************************************/
+ 
+-function MushraAudioControl(_audioContext, _bufferSize, _reference, _conditions, _errorHandler, _createAnchor35, _createAnchor70, _randomize) {
++function MushraAudioControl(_audioContext, _bufferSize, _reference, _conditions, _errorHandler, _createAnchor35, _createAnchor70, _randomize, _removeHiddenRef) {
+   this.audioContext = _audioContext;
+   this.bufferSize = parseInt(_bufferSize);
+   this.reference = _reference;
+-  this.conditions = _conditions;    
++  this.conditions = _conditions;
+   this.errorHandler = _errorHandler;
+   this.createAnchor35 = _createAnchor35;
+   this.createAnchor70 = _createAnchor70;
++  this.removeHiddenRef = _removeHiddenRef;
+   this.lowAnchor = null;
+   this.midAnchor = null;
+-  
++
+   this.audioPlaying = false;
+   this.audioCurrentPosition = 0;
+   this.audioSampleRate = null;
+   this.audioLoopStart = 0;
+-  this.audioLoopEnd = null;  
++  this.audioLoopEnd = null;
+   this.audioMaxPosition = null;
+   this.audioStimulus = null;
+-  this.audioLoopingActive = true;   
+-  
++  this.audioLoopingActive = true;
++
+   this.audioFadingActive = 0; // 0 = no, 1 = fade_out, 2 = fade_in
+   this.audioFadingIn = null;
+   this.audioFadingCurrentPosition = 0;
+-  this.audioFadingMaxPosition = parseInt(audioContext.sampleRate * 0.005);    
+-  this.audioMinimumLoopDuration = parseInt(audioContext.sampleRate * 0.5);    
++  this.audioFadingMaxPosition = parseInt(audioContext.sampleRate * 0.005);
++  this.audioMinimumLoopDuration = parseInt(audioContext.sampleRate * 0.5);
+   this.audioVolume = 1.0;
+   this.audioIsReferencePlaying = null;
+-  
++
+   // requests
+-  this.audioCurrentPositionRequest = null; 
++  this.audioCurrentPositionRequest = null;
+   this.audioFadingActiveRequest = null;
+-  
++
+   //listeners
+   this.eventListeners = [];
+ 
+-  this.conditions[this.conditions.length] = this.reference;  
+-  
++  if (!this.removeHiddenRef){
++    // Add reference to conditions (hidden reference)
++    this.conditions[this.conditions.length] = this.reference;
++  }
++
+   // add anchors
+   if (this.createAnchor35) {
+     this.conditions[this.conditions.length] = this.createLowerAnchor35(this.reference.getAudioBuffer());
+@@ -80,11 +84,11 @@ MushraAudioControl.prototype.createLowerAnchor35 = function(_reference) {
+     return null;
+   }
+   anchor35.setAudioBuffer(this.convolve(_reference, lowpass));
+-  return anchor35;  
++  return anchor35;
+ };
+ 
+ MushraAudioControl.prototype.createLowerAnchor70 = function(_reference) {
+-  var anchor70 = new Stimulus("anchor70", null);  
++  var anchor70 = new Stimulus("anchor70", null);
+   var lowpass_70 = {
+     "16000": [-0.00118209226,0.00100896033,-0.000618592779,-3.0648982e-21,0.000828010143,-0.00181288756,0.0028680964,-0.00387720074,0.00470245853,-0.00519757939,0.00522375966,-0.00466760994,0.00345919995,-0.00158821811,-0.000883779279,0.00381685249,-0.00699329572,0.0101261709,-0.012875787,0.0148733309,-0.0157500548,0.0151697236,-0.0128615154,0.00865031066,-0.00248133933,-0.00556350253,0.0152597233,-0.0262458867,0.03804101,-0.0500727925,0.0617147172,-0.0723291806,0.0813131625,-0.0881426193,0.0924118081,0.907353278,0.0924118081,-0.0881426193,0.0813131625,-0.0723291806,0.0617147172,-0.0500727925,0.03804101,-0.0262458867,0.0152597233,-0.00556350253,-0.00248133933,0.00865031066,-0.0128615154,0.0151697236,-0.0157500548,0.0148733309,-0.012875787,0.0101261709,-0.00699329572,0.00381685249,-0.000883779279,-0.00158821811,0.00345919995,-0.00466760994,0.00522375966,-0.00519757939,0.00470245853,-0.00387720074,0.0028680964,-0.00181288756,0.000828010143,-3.0648982e-21,-0.000618592779,0.00100896033,-0.00118209226],
+     "22050": [-0.00109204743,0.000364387668,0.00100704951,-0.00153304385,0.000365790771,0.00151198395,-0.0020376718,0.000291370261,0.00216171702,-0.00260011167,0.000112849298,0.0029784736,-0.00321181316,-0.000203222908,0.00398744555,-0.00386164534,-0.000697103657,0.00521902698,-0.00453617643,-0.00141884616,0.00671283398,-0.00522007536,-0.00243379393,0.00852493523,-0.00589662042,-0.00383289594,0.0107412503,-0.00654829386,-0.00575289893,0.0135037854,-0.00715743651,-0.00841856686,0.0170663665,-0.0077069323,-0.0122398534,0.0219272797,-0.00818089034,-0.0180687354,0.0292000372,-0.00856529187,-0.0280344748,0.0419362692,-0.00884857023,-0.0493861012,0.0723989052,-0.00902209522,-0.132916342,0.280240308,0.658338972,0.280240308,-0.132916342,-0.00902209522,0.0723989052,-0.0493861012,-0.00884857023,0.0419362692,-0.0280344748,-0.00856529187,0.0292000372,-0.0180687354,-0.00818089034,0.0219272797,-0.0122398534,-0.0077069323,0.0170663665,-0.00841856686,-0.00715743651,0.0135037854,-0.00575289893,-0.00654829386,0.0107412503,-0.00383289594,-0.00589662042,0.00852493523,-0.00243379393,-0.00522007536,0.00671283398,-0.00141884616,-0.00453617643,0.00521902698,-0.000697103657,-0.00386164534,0.00398744555,-0.000203222908,-0.00321181316,0.0029784736,0.000112849298,-0.00260011167,0.00216171702,0.000291370261,-0.0020376718,0.00151198395,0.000365790771,-0.00153304385,0.00100704951,0.000364387668,-0.00109204743],
+@@ -96,26 +100,26 @@ MushraAudioControl.prototype.createLowerAnchor70 = function(_reference) {
+   if (lowpass === null) {
+     this.errorHandler.sendError("Sample size" + _reference.sampleRate + " is not supported for creating anchors.");
+     return null;
+-  }  
++  }
+   anchor70.setAudioBuffer(this.convolve(_reference, lowpass));
+   return anchor70;
+ };
+ 
+ MushraAudioControl.prototype.convolve = function (_src, _coefficients) {
+   var buffer = this.audioContext.createBuffer(_src.numberOfChannels, _src.length, _src.sampleRate);
+-  
++
+   for (var i = 0; i < _src.numberOfChannels; ++i) {
+     var s1 = _src.getChannelData(i);
+     var dst = new Float32Array(_src.length + _coefficients.length - 1);
+     // filter
+     for (var n = 0; n < _src.length + _coefficients.length - 1; ++n) {
+-      dst[n] = 0.0;  
++      dst[n] = 0.0;
+       var kmin = (n >= _coefficients.length - 1) ? n - (_coefficients.length - 1) : 0;
+-      var kmax = (n < _src.length - 1) ? n : _src.length - 1;  
++      var kmax = (n < _src.length - 1) ? n : _src.length - 1;
+       for (var k = kmin; k <= kmax; ++k)
+       {
+         dst[n] += s1[k] * _coefficients[n - k];
+-      }     
++      }
+     }
+     // copy
+     var channelData = buffer.getChannelData(i);
+@@ -124,13 +128,13 @@ MushraAudioControl.prototype.convolve = function (_src, _coefficients) {
+       channelData[j] = dst[offset + j];
+     }
+   }
+-  
+-  
++
++
+   return buffer;
+ };
+ 
+ MushraAudioControl.prototype.removeEventListener = function(_index) {
+-  this.eventListeners[_index] = null;  
++  this.eventListeners[_index] = null;
+ };
+ 
+ 
+@@ -161,10 +165,10 @@ MushraAudioControl.prototype.initAudio = function() {
+   this.dummyBufferSource.loop = true;
+   this.dummyBufferSource.buffer = this.audioContext.createBuffer(1, this.bufferSize, this.audioContext.sampleRate);
+ 
+-  var channelCount = (this.reference.getAudioBuffer().numberOfChannels > 2) ?  this.audioContext.destination.channelCount : this.reference.getAudioBuffer().numberOfChannels;   
++  var channelCount = (this.reference.getAudioBuffer().numberOfChannels > 2) ?  this.audioContext.destination.channelCount : this.reference.getAudioBuffer().numberOfChannels;
+   this.scriptNode = this.audioContext.createScriptProcessor(this.bufferSize, 1, channelCount);
+   this.scriptNode.onaudioprocess = (function(audioProcessingEvent) { this.process(audioProcessingEvent); }).bind(this);
+-  
++
+   this.dummyBufferSource.connect(this.scriptNode);
+   this.scriptNode.connect(this.audioContext.destination);
+   this.dummyBufferSource.start();
+@@ -194,65 +198,65 @@ MushraAudioControl.prototype.process = function(audioProcessingEvent) {
+ 
+   var outputBuffer = audioProcessingEvent.outputBuffer;
+   var inputBuffer = audioProcessingEvent.inputBuffer;
+-  
++
+   var stimulus = this.audioStimulus;
+   var sample;
+   var ramp;
+   var outputData;
+   var channel;
+-  
++
+   if (stimulus === null || this.audioPlaying === false) {
+     // set to zero
+     for (channel = 0; channel < outputBuffer.numberOfChannels; ++channel) {
+       outputData = outputBuffer.getChannelData(channel);
+-      for (sample = 0; sample < outputBuffer.length; ++sample) {  
+-        outputData[sample] = 0;         
+-      }   
++      for (sample = 0; sample < outputBuffer.length; ++sample) {
++        outputData[sample] = 0;
++      }
+     }
+     return;
+   }
+-  
++
+   var audioBuffer = stimulus.getAudioBuffer();
+-  
++
+   if (this.audioCurrentPosition < this.audioLoopStart) {
+     this.audioCurrentPosition = this.audioLoopStart;
+   }
+-  
++
+ 
+   if (this.audioCurrentPositionRequest !== null) {
+     this.audioCurrentPosition = this.audioCurrentPositionRequest;
+     this.audioCurrentPositionRequest = null;
+-  } 
++  }
+   if (this.audioFadingActiveRequest !== null) {
+     this.audioFadingActive = this.audioFadingActiveRequest;
+     this.audioFadingActiveRequest = null;
+   }
+-  var currentPosition = null; 
++  var currentPosition = null;
+   var fadingCurrentPosition = null;
+   var fadingActive = null;
+   var loopingActive = this.audioLoopingActive;
+-  
++
+   for (channel = 0; channel < this.reference.getAudioBuffer().numberOfChannels; ++channel) {
+     outputData = outputBuffer.getChannelData(channel);
+     inputData = audioBuffer.getChannelData(channel);
+-    currentPosition = this.audioCurrentPosition; 
+-    fadingCurrentPosition = this.audioFadingCurrentPosition;      
++    currentPosition = this.audioCurrentPosition;
++    fadingCurrentPosition = this.audioFadingCurrentPosition;
+     fadingActive = this.audioFadingActive;
+-    
++
+     var a =[];
+     var b = [];
+     for (sample = 0; sample < outputBuffer.length; ++sample) {
+-      
++
+       if (loopingActive && (currentPosition == (this.audioLoopEnd - this.audioFadingMaxPosition))) { // loop almost at end => fading is triggered
+         fadingActive = 1;
+         this.audioFadingIn = this.audioStimulus;
+-        fadingCurrentPosition = 0;        
++        fadingCurrentPosition = 0;
+       }
+-      
++
+       if (fadingActive == 1) { // fade out
+         ramp = 0.5 * (1 + Math.cos(Math.PI*(fadingCurrentPosition++)/(this.audioFadingMaxPosition-1)));
+         outputData[sample] = inputData[currentPosition++] * ramp;
+-        if (fadingCurrentPosition >= this.audioFadingMaxPosition) {          
++        if (fadingCurrentPosition >= this.audioFadingMaxPosition) {
+           fadingActive = 2;
+           fadingCurrentPosition = 0;
+           if (this.audioFadingIn === null) {
+@@ -267,7 +271,7 @@ MushraAudioControl.prototype.process = function(audioProcessingEvent) {
+             stimulus = this.audioStimulus = this.audioFadingIn;
+             inputData = stimulus.getAudioBuffer().getChannelData(channel);
+           }
+-          
++
+         }
+       } else if (fadingActive == 2) { // fade in
+         ramp = 0.5 * (1 - Math.cos(Math.PI*(fadingCurrentPosition++)/(this.audioFadingMaxPosition-1)));
+@@ -277,7 +281,7 @@ MushraAudioControl.prototype.process = function(audioProcessingEvent) {
+           fadingActive = 0;
+         }
+       } else {
+-        outputData[sample] = inputData[currentPosition++];      
++        outputData[sample] = inputData[currentPosition++];
+       }
+       if (currentPosition >= this.audioLoopEnd) {
+         currentPosition = this.audioLoopStart;
+@@ -285,32 +289,32 @@ MushraAudioControl.prototype.process = function(audioProcessingEvent) {
+           this.audioPlaying = false;
+         }
+       }
+-    }   
++    }
+   }
+-  
++
+   // volume
+-  
++
+   for (channel = 0; channel < outputBuffer.numberOfChannels; ++channel) {
+     outputData = outputBuffer.getChannelData(channel);
+-    for (sample = 0; sample < outputBuffer.length; ++sample) {  
+-      outputData[sample] = outputData[sample] * this.audioContext.volume;         
+-    }   
+-  }  
+-  
+-  
++    for (sample = 0; sample < outputBuffer.length; ++sample) {
++      outputData[sample] = outputData[sample] * this.audioContext.volume;
++    }
++  }
++
++
+   // volume
+-  
+-  this.audioCurrentPosition = currentPosition;  
++
++  this.audioCurrentPosition = currentPosition;
+   this.audioFadingCurrentPosition = fadingCurrentPosition;
+   this.audioFadingActive = fadingActive;
+-  
++
+   var event = {
+   	name: 'processUpdate',
+   	currentSample:  this.audioCurrentPosition,
+   	sampleRate: this.audioSampleRate
+-  };  
++  };
+   this.sendEvent(event);
+-  
++
+ };
+ 
+ MushraAudioControl.prototype.setLoopStart = function(_start) {
+@@ -318,27 +322,27 @@ MushraAudioControl.prototype.setLoopStart = function(_start) {
+     this.audioLoopStart = _start;
+     if (this.audioCurrentPosition < this.audioLoopStart) {
+       this.audioCurrentPositionRequest = this.audioLoopStart;
+-    }    
++    }
+     var event = {
+-      name: 'loopStartChanged',      
++      name: 'loopStartChanged',
+       start : this.audioLoopStart,
+       end : this.audioLoopEnd
+-    };  
++    };
+     this.sendEvent(event);
+-  } 
++  }
+ };
+ 
+ MushraAudioControl.prototype.setLoopEnd = function(_end) {
+   if (_end <= this.audioMaxPosition && _end > this.audioLoopStart && (_end-this.audioLoopStart) >= this.audioMinimumLoopDuration) {
+-    this.audioLoopEnd = _end;    
++    this.audioLoopEnd = _end;
+     if (this.audioCurrentPosition > this.audioLoopEnd) {
+       this.audioCurrentPositionRequest = this.audioLoopEnd;
+-    }    
++    }
+     var event = {
+       name: 'loopEndChanged',
+       start : this.audioLoopStart,
+-      end : this.audioLoopEnd     
+-    };  
++      end : this.audioLoopEnd
++    };
+     this.sendEvent(event);
+   }
+ };
+@@ -350,15 +354,15 @@ MushraAudioControl.prototype.setLoop = function(_start, _end) {
+     this.audioLoopStart = _start;
+     if (this.audioCurrentPosition < this.audioLoopStart) {
+       this.audioCurrentPositionRequest = this.audioLoopStart;
+-    }   
+-    changed = true; 
+-  }  
++    }
++    changed = true;
++  }
+   if (_end <= this.audioMaxPosition && _end > this.audioLoopStart && (_end-_start) >= this.audioMinimumLoopDuration
+     && _end != this.audioLoopEnd) {
+-    this.audioLoopEnd = _end;    
++    this.audioLoopEnd = _end;
+     if (this.audioCurrentPosition > this.audioLoopEnd) {
+       this.audioCurrentPositionRequest = this.audioLoopEnd;
+-    }    
++    }
+     changed = true;
+   }
+ 
+@@ -366,10 +370,10 @@ MushraAudioControl.prototype.setLoop = function(_start, _end) {
+     var event = {
+       name: 'loopChanged',
+       start : this.audioLoopStart,
+-      end : this.audioLoopEnd    
+-    };  
++      end : this.audioLoopEnd
++    };
+     this.sendEvent(event);
+-  }	    
++  }
+ };
+ 
+ 
+@@ -386,8 +390,8 @@ MushraAudioControl.prototype.setPosition = function(_position, _setStartEnd) {
+     name: 'processUpdate',
+     currentSample:  this.audioCurrentPositionRequest,
+     sampleRate: this.audioSampleRate
+-  };  
+-  this.sendEvent(eventUpdate);  
++  };
++  this.sendEvent(eventUpdate);
+ };
+ 
+ MushraAudioControl.prototype.getNumSamples = function() {
+@@ -405,11 +409,11 @@ MushraAudioControl.prototype.play = function(_stimulus, _isReference) {
+     this.fadeOut(_stimulus);
+   } else {
+     this.audioStimulus = _stimulus;
+-    if (this.audioPlaying === false) {      
++    if (this.audioPlaying === false) {
+       this.fadeIn(_stimulus);
+-    }          
+-  }    
+-  this.audioPlaying = true;  
++    }
++  }
++  this.audioPlaying = true;
+ };
+ 
+ MushraAudioControl.prototype.getActiveStimulus = function() {
+@@ -420,24 +424,24 @@ MushraAudioControl.prototype.playReference = function() {
+   this.play(this.reference, true);
+   this.audioIsReferencePlaying = true;
+ 
+-  
++
+   var event = {
+   	name: 'playReferenceTriggered',
+   	conditionLength : this.conditions.length
+-  };  
++  };
+   this.sendEvent(event);
+ 
+   return;
+ };
+ 
+ MushraAudioControl.prototype.playCondition = function(_index) {
+-  this.play(this.conditions[_index], false);  
++  this.play(this.conditions[_index], false);
+   this.audioIsReferencePlaying = false;
+   var event = {
+   	name: 'playConditionTriggered',
+   	index : _index,
+   	length : this.conditions.length
+-  };  
++  };
+   this.sendEvent(event);
+ 
+   return;
+@@ -465,7 +469,7 @@ MushraAudioControl.prototype.pause = function() {
+   var event = {
+     name: 'pauseTriggered',
+     conditionLength : this.conditions.length
+-  };  
++  };
+   this.sendEvent(event);
+   return;
+ };
+@@ -479,17 +483,17 @@ MushraAudioControl.prototype.stop = function() {
+   var event = {
+     name: 'stopTriggered',
+     conditionLength : this.conditions.length
+-  };  
++  };
+   this.sendEvent(event);
+-  
++
+   var eventUpdate = {
+     name: 'processUpdate',
+     currentSample:  this.audioCurrentPositionRequest,
+     sampleRate: this.audioSampleRate
+-  };  
++  };
+   this.sendEvent(eventUpdate);
+-  
+-  
++
++
+   return;
+ };
+ 
+@@ -506,4 +510,3 @@ MushraAudioControl.prototype.getReferenceIndexOfConditions = function() {
+     return null;
+   }
+ };
+-
+diff --git a/lib/webmushra/pages/MushraPage.js b/lib/webmushra/pages/MushraPage.js
+index 72b950a..b042150 100644
+--- a/lib/webmushra/pages/MushraPage.js
++++ b/lib/webmushra/pages/MushraPage.js
+@@ -1,12 +1,12 @@
+ /*************************************************************************
+-         (C) Copyright AudioLabs 2017 
++         (C) Copyright AudioLabs 2017
+ 
+-This source code is protected by copyright law and international treaties. This source code is made available to You subject to the terms and conditions of the Software License for the webMUSHRA.js Software. Said terms and conditions have been made available to You prior to Your download of this source code. By downloading this source code You agree to be bound by the above mentionend terms and conditions, which can also be found here: https://www.audiolabs-erlangen.de/resources/webMUSHRA. Any unauthorised use of this source code may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under law. 
++This source code is protected by copyright law and international treaties. This source code is made available to You subject to the terms and conditions of the Software License for the webMUSHRA.js Software. Said terms and conditions have been made available to You prior to Your download of this source code. By downloading this source code You agree to be bound by the above mentionend terms and conditions, which can also be found here: https://www.audiolabs-erlangen.de/resources/webMUSHRA. Any unauthorised use of this source code may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under law.
+ 
+ **************************************************************************/
+ 
+ function MushraPage(_pageManager, _audioContext, _bufferSize, _audioFileLoader, _session, _pageConfig, _mushraValidator, _errorHandler, _language) {
+-	this.isMushra = true; 
++	this.isMushra = true;
+   this.pageManager = _pageManager;
+   this.audioContext = _audioContext;
+   this.bufferSize = _bufferSize;
+@@ -19,11 +19,11 @@ function MushraPage(_pageManager, _audioContext, _bufferSize, _audioFileLoader,
+   this.mushraAudioControl = null;
+   this.div = null;
+   this.waveformVisualizer = null;
+-  this.macic = null; 
+-  
++  this.macic = null;
++
+   this.currentItem = null;
+-  
+-  this.tdLoop2 = null; 
++
++  this.tdLoop2 = null;
+ 
+   this.conditions = [];
+   for (var key in this.pageConfig.stimuli) {
+@@ -39,9 +39,21 @@ function MushraPage(_pageManager, _audioContext, _bufferSize, _audioFileLoader,
+   this.ratings = [];
+   this.loop = {start: null, end: null};
+   this.slider = {start: null, end: null};
+-  
++
+   this.time = 0;
+   this.startTimeOnPage = null;
++
++	if (this.pageConfig.showReference === null | this.pageConfig.showReference === undefined){
++		this.showReference = true;
++	}	else {
++		this.showReference = this.pageConfig.showReference;
++	}
++
++	if (this.pageConfig.removeHiddenRef === null | this.pageConfig.removeHiddenRef === undefined){
++		this.removeHiddenRef = true;
++	}	else {
++		this.removeHiddenRef = this.pageConfig.removeHiddenRef;
++	}
+ }
+ 
+ 
+@@ -51,15 +63,15 @@ MushraPage.prototype.getName = function () {
+ };
+ 
+ MushraPage.prototype.init = function () {
+-   var toDisable;
++  var toDisable;
+   var td;
+-  var active; 
+-  
++  var active;
++
+   if (this.pageConfig.strict !== false) {
+     this.mushraValidator.checkNumConditions(this.conditions);
+     this.mushraValidator.checkStimulusDuration(this.reference);
+   }
+-  
++
+   this.mushraValidator.checkNumChannels(this.audioContext, this.reference);
+ 	var i;
+   for (i = 0; i < this.conditions.length; ++i) {
+@@ -68,19 +80,19 @@ MushraPage.prototype.init = function () {
+   this.mushraValidator.checkConditionConsistency(this.reference, this.conditions);
+ 
+ 
++	this.mushraAudioControl = new MushraAudioControl(this.audioContext, this.bufferSize, this.reference, this.conditions, this.errorHandler, this.pageConfig.createAnchor35, this.pageConfig.createAnchor70, this.pageConfig.randomize, this.removeHiddenRef);
+ 
+-  this.mushraAudioControl = new MushraAudioControl(this.audioContext, this.bufferSize, this.reference, this.conditions, this.errorHandler, this.pageConfig.createAnchor35, this.pageConfig.createAnchor70, this.pageConfig.randomize);
+   this.mushraAudioControl.addEventListener((function (_event) {
+   if (_event.name == 'stopTriggered') {
+     $(".audioControlElement").text(this.pageManager.getLocalizer().getFragment(this.language, 'playButton'));
+-
+-    if($('#buttonReference').attr("active") == "true") {
+-      $.mobile.activePage.find('#buttonReference')  //remove color from Reference
+-        .removeClass('ui-btn-b')
+-        .addClass('ui-btn-a').attr('data-theme', 'a');
+-      $('#buttonReference').attr("active", "false");
+-    }
+-
++		if(this.showReference){
++	    if($('#buttonReference').attr("active") == "true") {
++	      $.mobile.activePage.find('#buttonReference')  //remove color from Reference
++	        .removeClass('ui-btn-b')
++	        .addClass('ui-btn-a').attr('data-theme', 'a');
++	      $('#buttonReference').attr("active", "false");
++	    }
++		}
+ 
+     for(i = 0; i < _event.conditionLength; i++) {
+       active = '#buttonConditions' + i;
+@@ -113,24 +125,25 @@ MushraPage.prototype.init = function () {
+ 
+ 	var j;
+     for(j = 0; j < _event.conditionLength; j++) {
+-  	  active = '#buttonConditions' + j; 
+-  	  toDisable = $(".scales").get(j); 
++  	  active = '#buttonConditions' + j;
++  	  toDisable = $(".scales").get(j);
+   		if($(active).attr("active") == "true") {
+   			$.mobile.activePage.find(active)			// remove color from conditions
+   			  .removeClass('ui-btn-b')
+-  			  .addClass('ui-btn-a').attr('data-theme', 'a'); 
++  			  .addClass('ui-btn-a').attr('data-theme', 'a');
+   			$(active).attr("active", "false");
+   			$(toDisable).slider('disable');
+   			$(toDisable).attr("active", "false");
+   			break;
+   		}
+   	}
+-
+-    $.mobile.activePage.find('#buttonReference')		//add color to reference
+-  	  .removeClass('ui-btn-a')
+-  	  .addClass('ui-btn-b').attr('data-theme', 'b');
+-    $.mobile.activePage.find('#buttonReference').focus();
+-  	$('#buttonReference').attr("active", "true");
++		if (this.showReference){
++	    $.mobile.activePage.find('#buttonReference')		//add color to reference
++	  	  .removeClass('ui-btn-a')
++	  	  .addClass('ui-btn-b').attr('data-theme', 'b');
++	    $.mobile.activePage.find('#buttonReference').focus();
++	  	$('#buttonReference').attr("active", "true");
++		}
+   } else if(_event.name == 'playConditionTriggered') {
+ 
+     var index = _event.index;
+@@ -140,20 +153,21 @@ MushraPage.prototype.init = function () {
+     if($('#buttonStop').attr("active") == "true") {
+       $.mobile.activePage.find('#buttonStop')  //remove color from Stop
+         .removeClass('ui-btn-b')
+-        .addClass('ui-btn-a').attr('data-theme', 'a'); 
++        .addClass('ui-btn-a').attr('data-theme', 'a');
+ 	    $('#buttonStop').attr("active", "false");
+     }
+-
+-    if($('#buttonReference').attr("active") == "true") {
+-      $.mobile.activePage.find('#buttonReference')	//remove color from Reference
+-	      .removeClass('ui-btn-b')
+-		    .addClass('ui-btn-a').attr('data-theme', 'a');
+-	    $('#buttonReference').attr("active", "false");
+-    }
++		if(this.showReference){
++	    if($('#buttonReference').attr("active") == "true") {
++	      $.mobile.activePage.find('#buttonReference')	//remove color from Reference
++		      .removeClass('ui-btn-b')
++			    .addClass('ui-btn-a').attr('data-theme', 'a');
++		    $('#buttonReference').attr("active", "false");
++	    }
++		}
+ 	var k;
+     for(k = 0; k < _event.length; k++) {
+       active = '#buttonConditions' + k;
+-      toDisable = $(".scales").get(k); 
++      toDisable = $(".scales").get(k);
+       if($(active).attr("active") == "true") {
+   	    $.mobile.activePage.find(active)    // remove color from conditions
+   	      .removeClass('ui-btn-b')
+@@ -177,26 +191,26 @@ MushraPage.prototype.init = function () {
+ 
+ 
+ }).bind(this));
+-  
+-  
+-  
++
++
++
+ };
+ 
+ MushraPage.prototype.render = function (_parent) {
+   var div = $("<div></div>");
+   _parent.append(div);
+-  var content; 
++  var content;
+   if(this.pageConfig.content === null){
+ 	content ="";
+   } else {
+ 	content = this.pageConfig.content;
+   }
+-	
++
+   var p = $("<p>" + content + "</p>");
+   div.append(p);
+ 
+   var tableUp = $("<table id='mainUp'></table>");
+-  var tableDown = $("<table id='mainDown' align = 'center'></table>"); 
++  var tableDown = $("<table id='mainDown' align = 'center'></table>");
+   div.append(tableUp);
+   div.append(tableDown);
+ 
+@@ -211,10 +225,10 @@ MushraPage.prototype.render = function (_parent) {
+   trLoop.append(tdLoop1);
+ 
+ 
+-  
++
+   var tdRight = $("<td></td>");
+   trLoop.append(tdRight);
+-  
++
+ 
+   var trMushra = $("<tr></tr>");
+   tableDown.append(trMushra);
+@@ -227,7 +241,11 @@ MushraPage.prototype.render = function (_parent) {
+   var trConditionNames = $("<tr></tr>");
+   tableMushra.append(trConditionNames);
+ 
+-  var tdConditionNamesReference = $("<td>" + this.pageManager.getLocalizer().getFragment(this.language, 'reference') + "</td>");
++	if(this.showReference){
++  	var tdConditionNamesReference = $("<td>" + this.pageManager.getLocalizer().getFragment(this.language, 'reference') + "</td>");
++	}else{
++		var tdConditionNamesReference = $("<td></td>");
++	}
+   trConditionNames.append(tdConditionNamesReference);
+ 
+   var tdConditionNamesScale = $("<td id='conditionNameScale'></td>");
+@@ -262,14 +280,15 @@ MushraPage.prototype.render = function (_parent) {
+   var tdConditionPlayReference = $("<td></td>");
+   trConditionPlay.append(tdConditionPlayReference);
+ 
+-  var buttonPlayReference = $("<button data-theme='a' id='buttonReference' data-role='button' class='audioControlElement' onclick='" + this.pageManager.getPageVariableName(this) + ".btnCallbackReference()' style='margin : 0 auto;'>" + this.pageManager.getLocalizer().getFragment(this.language, 'playButton') + "</button>");
+-  tdConditionPlayReference.append(buttonPlayReference);
+-
++	if(this.showReference){
++	  var buttonPlayReference = $("<button data-theme='a' id='buttonReference' data-role='button' class='audioControlElement' onclick='" + this.pageManager.getPageVariableName(this) + ".btnCallbackReference()' style='margin : 0 auto;'>" + this.pageManager.getLocalizer().getFragment(this.language, 'playButton') + "</button>");
++	  tdConditionPlayReference.append(buttonPlayReference);
++	}
+   var tdConditionPlayScale = $("<td></td>");
+   trConditionPlay.append(tdConditionPlayScale);
+ 
+   for (i = 0; i < conditions.length; ++i) {
+-    td = $("<td></td>"); 
++    td = $("<td></td>");
+     var buttonPlay = $("<button data-role='button' class='center audioControlElement' onclick='" + this.pageManager.getPageVariableName(this) + ".btnCallbackCondition(" + i + ");'>" + this.pageManager.getLocalizer().getFragment(this.language, 'playButton') + "</button>");
+     buttonPlay.attr("id", "buttonConditions" + i);
+     td.append(buttonPlay);
+@@ -300,7 +319,7 @@ MushraPage.prototype.render = function (_parent) {
+ 
+ 
+   this.macic = new MushraAudioControlInputController(this.mushraAudioControl, this.pageConfig.enableLooping);
+-  this.macic.bind(); 
++  this.macic.bind();
+ 
+ this.waveformVisualizer = new WaveformVisualizer(this.pageManager.getPageVariableName(this) + ".waveformVisualizer", tdRight, this.reference, this.pageConfig.showWaveform, this.pageConfig.enableLooping, this.mushraAudioControl);
+   this.waveformVisualizer.create();
+@@ -321,7 +340,7 @@ MushraPage.prototype.setLoopStart = function() {
+ };
+ 
+ MushraPage.prototype.setLoopEnd = function() {
+-  var slider = document.getElementById('slider'); 
++  var slider = document.getElementById('slider');
+   var startSliderSamples = parseFloat(slider.noUiSlider.get()[0]);
+ 
+   var endSliderSamples = this.mushraAudioControl.audioCurrentPosition;
+@@ -340,11 +359,11 @@ MushraPage.prototype.btnCallbackReference = function() {
+     this.mushraAudioControl.playReference();
+     $("#buttonReference").text(this.pageManager.getLocalizer().getFragment(this.language, 'pauseButton'));
+   }
+-}; 
++};
+ 
+ MushraPage.prototype.btnCallbackCondition = function(_index) {
+-	this.currentItem = _index;	
+-	
++	this.currentItem = _index;
++
+   var label = $("#buttonConditions" + _index).text();
+   if (label == this.pageManager.getLocalizer().getFragment(this.language, 'pauseButton')) {
+     this.mushraAudioControl.pause();
+@@ -357,7 +376,7 @@ MushraPage.prototype.btnCallbackCondition = function(_index) {
+ };
+ 
+ MushraPage.prototype.renderCanvas = function(_parentId) {
+-	$('#mushra_canvas').remove(); 
++	$('#mushra_canvas').remove();
+   parent = $('#' + _parentId);
+   var canvas = document.createElement("canvas");
+   canvas.style.position = "absolute";
+@@ -442,13 +461,13 @@ MushraPage.prototype.renderCanvas = function(_parentId) {
+ MushraPage.prototype.load = function () {
+ 
+   this.startTimeOnPage = new Date();
+-	
+-	
++
++
+   this.renderCanvas('mushra_items');
+- 
+- 
++
++
+   this.mushraAudioControl.initAudio();
+- 
++
+   if (this.ratings.length !== 0) {
+     var scales = $(".scales");
+     var i;
+@@ -460,27 +479,27 @@ MushraPage.prototype.load = function () {
+     this.mushraAudioControl.setLoop(0, 0, this.mushraAudioControl.getDuration(), this.mushraAudioControl.getDuration() /this.waveformVisualizer.stimulus.audioBuffer.sampleRate);
+     this.mushraAudioControl.setPosition(0);
+   }
+- 
++
+ };
+ 
+ MushraPage.prototype.save = function () {
+-  this.macic.unbind(); 
++  this.macic.unbind();
+   this.time += 	(new Date() - this.startTimeOnPage);
+   this.mushraAudioControl.freeAudio();
+-  this.mushraAudioControl.removeEventListener(this.waveformVisualizer.numberEventListener);  
++  this.mushraAudioControl.removeEventListener(this.waveformVisualizer.numberEventListener);
+   var scales = $(".scales");
+   this.ratings = [];
+   var i;
+   for (i = 0; i  < scales.length; ++i) {
+     this.ratings[i] = {name: scales[i].name, value: scales[i].value};
+   }
+- 
++
+   this.loop.start = parseInt(this.waveformVisualizer.mushraAudioControl.audioLoopStart);
+   this.loop.end = parseInt(this.waveformVisualizer.mushraAudioControl.audioLoopEnd);
+ };
+ 
+ MushraPage.prototype.store = function () {
+-	
++
+   var trial = new Trial();
+   trial.type = this.pageConfig.type;
+   trial.id = this.pageConfig.id;
+-- 
+2.19.1.windows.1
+

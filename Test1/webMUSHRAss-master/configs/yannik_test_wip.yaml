@@ -3,6 +3,8 @@ testId: yannikslisteningtest
 bufferSize: 2048
 stopOnErrors: true
 showButtonPreviousPage: true
+showReference: false
+removeHiddenRef: true
 remoteService: service/write.php
 
 
